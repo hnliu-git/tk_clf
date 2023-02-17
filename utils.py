@@ -17,7 +17,7 @@ def build_tags(fields, non_fields):
     return {tag: tag_id for tag_id, tag in enumerate(tags)}
 
 
-def tokenize_and_align_labels(examples, tokenizer, label_all_tokens):
+def tokenize_and_align_labels(examples, tokenizer, label_all_tokens=True):
     tokenized_inputs = tokenizer(examples["tokens"], truncation=True, is_split_into_words=True)
 
     labels = []

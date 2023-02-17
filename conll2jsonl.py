@@ -51,8 +51,6 @@ def write_sample(json_list, output_file):
             json_fh.write('\n')
 
 
-
-
 tags = build_tags(vac_tags, non_tag)
 data_dir = 'data/vac-en/'
 

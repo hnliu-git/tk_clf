@@ -15,11 +15,11 @@ def compute_metrics(p):
 
     # Remove ignored index (special tokens)
     true_predictions = [
-        [id_to_labels[p] for (p, l) in zip(prediction, label) if l != -100]
+        ['_'+id_to_labels[p] for (p, l) in zip(prediction, label) if l != -100]
         for prediction, label in zip(predictions, labels)
     ]
     true_labels = [
-        [id_to_labels[l] for (p, l) in zip(prediction, label) if l != -100]
+        ['_'+id_to_labels[l] for (p, l) in zip(prediction, label) if l != -100]
         for prediction, label in zip(predictions, labels)
     ]
 
@@ -36,16 +36,17 @@ def compute_metrics(p):
 
     return flattened_results
 
-data_folder = 'data/vac-en/'
+epoch = 20
+data_folder = '../'
+model_name = 'roberta-base'
+exp_name = '%s-en-epoch%d'%(model_name, epoch)
 
 label_names = build_tags(vac_tags, non_tag)
 id_to_labels = {id: label for label, id in label_names.items()}
 
-wandb.init(project="bert_cv_ner")
-
 data_files = {
     'train': data_folder + 'train.jsonl',
-    'validation': data_folder + 'valid.jsonl',
+    'validation': data_folder + 'devel.jsonl',
     'test': data_folder + 'test.jsonl'
 }
 
@@ -55,17 +56,22 @@ print(f'train: {len(dataset["train"])}')
 print(f'eval: {len(dataset["validation"])}')
 print(f'test: {len(dataset["test"])}')
 
-tokenizer = AutoTokenizer.from_pretrained("bert-base-multilingual-cased")
+if 'roberta' in model_name:
+  tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True)
+else:
+  tokenizer = AutoTokenizer.from_pretrained(model_name)
 tokenized_dataset = dataset.map(lambda x: tokenize_and_align_labels(x, tokenizer), batched=True)
 
 data_collator = DataCollatorForTokenClassification(tokenizer)
 
 model = AutoModelForTokenClassification.from_pretrained(
-    "bert-base-multilingual-cased",
+    model_name,
     num_labels=len(label_names)
 )
 
 metric = datasets.load_metric("seqeval")
+
+wandb.init(project="bert_cv_ner", name=exp_name)
 
 training_args = TrainingArguments(
     output_dir="./fine_tune_bert_output",
@@ -73,13 +79,14 @@ training_args = TrainingArguments(
     learning_rate=2e-5,
     per_device_train_batch_size=16,
     per_device_eval_batch_size=16,
-    num_train_epochs=5,
+    num_train_epochs=epoch,
     weight_decay=0.01,
-    logging_steps = 30,
+    logging_steps = 100,
     report_to="wandb",
     run_name = "ep_01_tokenized_02",
     save_strategy='no'
 )
+
 trainer = Trainer(
     model=model,
     args=training_args,
