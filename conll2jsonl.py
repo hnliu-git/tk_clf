@@ -1,7 +1,7 @@
 import csv
 import json
 
-from constants import non_tag, vac_tags
+from utils import tag_list
 
 
 def convert_to_jsonlist(filename, tag_dict, delimiter='\t'):
@@ -50,10 +50,8 @@ def write_sample(json_list, output_file):
             json.dump(json_obj, json_fh)
             json_fh.write('\n')
 
-
-tags = build_tags(vac_tags, non_tag)
-data_dir = 'data/vac-en/'
+data_dir = 'data/vac-de/'
 
 for split in ['train', 'devel', 'test']:
-    json_list = convert_to_jsonlist(data_dir + '%s.tsv'%split, tags)
+    json_list = convert_to_jsonlist(data_dir + '%s.tsv'%split, tag_list)
     write_sample(json_list, data_dir + '%s.jsonl'%split)

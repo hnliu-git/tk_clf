@@ -1,13 +1,4 @@
 
-vac_tags = [
-    "vac_job_title","vac_num_positions","vac_location","org_name","org_num_employees","org_industry","prof_education",
-    "prof_experience","prof_languages","prof_drivers_license","prof_computer_skills","prof_competence","cond_working_hours",
-    "cond_hours_per_week","cond_employment_type","cond_contract_type","salary","org_contact_person","org_contact_person_function",
-    "org_address","org_phone","org_fax","org_email","org_website","vac_ref_no","vac_posted_date","vac_apply_date","vac_start_date"
-]
-
-non_tag = "-"
-
 def build_tags(fields, non_fields):
     tags = list()
     tags.append(non_fields)
@@ -43,3 +34,14 @@ def tokenize_and_align_labels(examples, tokenizer, label_all_tokens=True):
 
     tokenized_inputs["labels"] = labels
     return tokenized_inputs
+
+vac_tags = [
+    "vac_job_title","vac_num_positions","vac_location","org_name","org_num_employees","org_industry","prof_education",
+    "prof_experience","prof_languages","prof_drivers_license","prof_computer_skills","prof_competence","cond_working_hours",
+    "cond_hours_per_week","cond_employment_type","cond_contract_type","salary","org_contact_person","org_contact_person_function",
+    "org_address","org_phone","org_fax","org_email","org_website","vac_ref_no","vac_posted_date","vac_apply_date","vac_start_date"
+]
+
+non_tag = "-"
+
+tag_list = build_tags(vac_tags, non_tag)
