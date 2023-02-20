@@ -3,6 +3,8 @@ from transformers import DataCollatorForTokenClassification
 from transformers import AutoModelForTokenClassification, TrainingArguments, Trainer
 
 from utils import vac_tags, non_tag, build_tags, tokenize_and_align_labels
+from metric_utils.metrics import initialize_metrics
+from metric_utils.data_utils import TagDict
 
 import datasets
 import numpy as np
@@ -15,26 +17,17 @@ def compute_metrics(p):
 
     # Remove ignored index (special tokens)
     true_predictions = [
-        ['_'+id_to_labels[p] for (p, l) in zip(prediction, label) if l != -100]
+        [id_to_labels[p] for (p, l) in zip(prediction, label) if l != -100]
         for prediction, label in zip(predictions, labels)
     ]
     true_labels = [
-        ['_'+id_to_labels[l] for (p, l) in zip(prediction, label) if l != -100]
+        [id_to_labels[l] for (p, l) in zip(prediction, label) if l != -100]
         for prediction, label in zip(predictions, labels)
     ]
 
-    results = metric.compute(predictions=true_predictions, references=true_labels)
-    flattened_results = {
-        "overall_precision": results["overall_precision"],
-        "overall_recall": results["overall_recall"],
-        "overall_f1": results["overall_f1"],
-        "overall_accuracy": results["overall_accuracy"],
-    }
-    for k in results.keys():
-        if(k not in flattened_results.keys()):
-            flattened_results[k+"_f1"]=results[k]["f1"]
+    results = metrics.compute(predictions=true_predictions, references=true_labels)
 
-    return flattened_results
+    return results
 
 epoch = 20
 data_folder = '../'
@@ -56,10 +49,7 @@ print(f'train: {len(dataset["train"])}')
 print(f'eval: {len(dataset["validation"])}')
 print(f'test: {len(dataset["test"])}')
 
-if 'roberta' in model_name:
-  tokenizer = AutoTokenizer.from_pretrained(model_name, add_prefix_space=True)
-else:
-  tokenizer = AutoTokenizer.from_pretrained(model_name)
+tokenizer = AutoTokenizer.from_pretrained(model_name)
 tokenized_dataset = dataset.map(lambda x: tokenize_and_align_labels(x, tokenizer), batched=True)
 
 data_collator = DataCollatorForTokenClassification(tokenizer)
@@ -69,7 +59,11 @@ model = AutoModelForTokenClassification.from_pretrained(
     num_labels=len(label_names)
 )
 
-metric = datasets.load_metric("seqeval")
+metrics = initialize_metrics(
+    metric_names=['accuracy', 'entity_score', 'entity_overlap'],
+    tags=TagDict.from_file('metric_utils/vac-phrases-full-tags.txt'),
+    main_entities=open('metric_utils/main_ents.txt').read().splitlines()
+)
 
 wandb.init(project="bert_cv_ner", name=exp_name)
 
