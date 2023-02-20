@@ -65,7 +65,7 @@ metrics = initialize_metrics(
     main_entities=open('metric_utils/main_ents.txt').read().splitlines()
 )
 
-wandb.init(project="bert_cv_ner", name=exp_name)
+wandb.init(project="bert_vac_ner", name=exp_name)
 
 training_args = TrainingArguments(
     output_dir="./fine_tune_bert_output",
