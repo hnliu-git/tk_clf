@@ -1,4 +1,4 @@
-from decorators import load_resource_file_once
+from metric_utils.decorators import load_resource_file_once
 
 class TagDict:
     NONE_LABEL = "-"

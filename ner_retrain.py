@@ -17,15 +17,15 @@ def compute_metrics(p):
 
     # Remove ignored index (special tokens)
     true_predictions = [
-        [id_to_labels[p] for (p, l) in zip(prediction, label) if l != -100]
+        [p for (p, l) in zip(prediction, label) if l != -100]
         for prediction, label in zip(predictions, labels)
     ]
     true_labels = [
-        [id_to_labels[l] for (p, l) in zip(prediction, label) if l != -100]
+        [l for (p, l) in zip(prediction, label) if l != -100]
         for prediction, label in zip(predictions, labels)
     ]
 
-    results = metrics.compute(predictions=true_predictions, references=true_labels)
+    results = metrics.compute(predictions=true_predictions, gold=true_labels)
 
     return results
 

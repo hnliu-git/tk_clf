@@ -24,8 +24,8 @@ from math import isclose
 
 import numpy as np
 
-from data_utils import TagDict
-from entity import EntitySetCreator, align_spans, intersection
+from metric_utils.data_utils import TagDict
+from metric_utils.entity import EntitySetCreator, align_spans, intersection
 
 
 class Metrics(Enum):
