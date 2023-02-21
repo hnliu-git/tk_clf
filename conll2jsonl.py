@@ -1,7 +1,7 @@
 import csv
 import json
 
-from utils import tag_list
+from utils import vac_tags_dict, vac_main_dict
 
 
 def convert_to_jsonlist(filename, tag_dict, delimiter='\t'):
@@ -15,6 +15,7 @@ def convert_to_jsonlist(filename, tag_dict, delimiter='\t'):
         guid = 0
         for row in csv_reader:
             token, tag_str, _id = row[2], row[0], row[1]
+            if tag_str not in tag_dict: continue
             tag = tag_dict[tag_str]
             if prev_id == '':
                 prev_id = _id
@@ -50,8 +51,17 @@ def write_sample(json_list, output_file):
             json.dump(json_obj, json_fh)
             json_fh.write('\n')
 
-data_dir = 'data/vac-de/'
+data_dir = 'data/vac-nl-no-norm-main/'
 
 for split in ['train', 'devel', 'test']:
-    json_list = convert_to_jsonlist(data_dir + '%s.tsv'%split, tag_list)
+    json_list = convert_to_jsonlist(data_dir + '%s.tsv'%split, vac_main_dict)
     write_sample(json_list, data_dir + '%s.jsonl'%split)
+
+file_path = 'data/de-train.tsv'
+
+json_list = convert_to_jsonlist(
+    file_path,
+    vac_main_dict,
+)
+
+write_sample(json_list, file_path.replace('.tsv', '-main.jsonl'))

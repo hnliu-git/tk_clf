@@ -42,6 +42,13 @@ vac_tags = [
     "org_address","org_phone","org_fax","org_email","org_website","vac_ref_no","vac_posted_date","vac_apply_date","vac_start_date"
 ]
 
+main_vac_tags = [
+    "vac_job_title", "vac_location", "org_name", "prof_education", "prof_experience","prof_languages", "cond_working_hours",
+    "cond_hours_per_week", "cond_employment_type", "cond_contract_type", "salary", "org_contact_person", "org_address",
+    "org_phone", "org_email", "org_website", "vac_ref_no"
+]
+
 non_tag = "-"
 
-tag_list = build_tags(vac_tags, non_tag)
+vac_tags_dict = build_tags(vac_tags, non_tag)
+vac_main_dict = build_tags(main_vac_tags, non_tag)

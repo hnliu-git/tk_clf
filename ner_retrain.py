@@ -2,7 +2,7 @@ from transformers import AutoTokenizer
 from transformers import DataCollatorForTokenClassification
 from transformers import AutoModelForTokenClassification, TrainingArguments, Trainer
 
-from utils import vac_tags, non_tag, build_tags, tokenize_and_align_labels
+from utils import vac_tags_dict, vac_main_dict, tokenize_and_align_labels
 from metric_utils.metrics import initialize_metrics
 from metric_utils.data_utils import TagDict
 
@@ -34,8 +34,7 @@ data_folder = '../'
 model_name = 'roberta-base'
 exp_name = '%s-en-epoch%d'%(model_name, epoch)
 
-label_names = build_tags(vac_tags, non_tag)
-id_to_labels = {id: label for label, id in label_names.items()}
+id_to_labels = {id: label for label, id in vac_main_dict.items()}
 
 data_files = {
     'train': data_folder + 'train.jsonl',
