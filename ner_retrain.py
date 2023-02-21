@@ -34,8 +34,6 @@ data_folder = '../'
 model_name = 'roberta-base'
 exp_name = '%s-en-epoch%d'%(model_name, epoch)
 
-id_to_labels = {id: label for label, id in vac_main_dict.items()}
-
 data_files = {
     'train': data_folder + 'train.jsonl',
     'validation': data_folder + 'devel.jsonl',
@@ -55,7 +53,7 @@ data_collator = DataCollatorForTokenClassification(tokenizer)
 
 model = AutoModelForTokenClassification.from_pretrained(
     model_name,
-    num_labels=len(label_names)
+    num_labels=len(vac_main_dict)
 )
 
 metrics = initialize_metrics(
