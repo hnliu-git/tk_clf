@@ -2,7 +2,7 @@ from transformers import AutoTokenizer
 from transformers import DataCollatorForTokenClassification
 from transformers import AutoModelForTokenClassification, TrainingArguments, Trainer
 
-from utils import vac_tags_dict, vac_main_dict, tokenize_and_align_labels
+from utils import vac_tags_dict, vac_main_dict, tokenize_and_align_labels, tokenize_and_align_labels_and_chunk, TKDataset 
 from metric_utils.metrics import initialize_metrics
 from metric_utils.data_utils import TagDict
 
@@ -31,7 +31,7 @@ def compute_metrics(p):
 
 epoch = 20
 data_folder = '../'
-model_name = 'roberta-base'
+model_name = 'xlm-roberta-base'
 exp_name = '%s-en-epoch%d'%(model_name, epoch)
 
 data_files = {
@@ -47,13 +47,13 @@ print(f'eval: {len(dataset["validation"])}')
 print(f'test: {len(dataset["test"])}')
 
 tokenizer = AutoTokenizer.from_pretrained(model_name)
-tokenized_dataset = dataset.map(lambda x: tokenize_and_align_labels(x, tokenizer), batched=True)
+tokenized_dataset = dataset.map(lambda x: tokenize_and_align_labels_and_chunk(x, tokenizer))
 
 data_collator = DataCollatorForTokenClassification(tokenizer)
 
 model = AutoModelForTokenClassification.from_pretrained(
     model_name,
-    num_labels=len(vac_main_dict)
+    num_labels=len(vac_tags_dict)
 )
 
 metrics = initialize_metrics(
@@ -68,8 +68,8 @@ training_args = TrainingArguments(
     output_dir="./fine_tune_bert_output",
     evaluation_strategy="steps",
     learning_rate=2e-5,
-    per_device_train_batch_size=16,
-    per_device_eval_batch_size=16,
+    per_device_train_batch_size=8,
+    per_device_eval_batch_size=8,
     num_train_epochs=epoch,
     weight_decay=0.01,
     logging_steps = 100,
@@ -81,8 +81,8 @@ training_args = TrainingArguments(
 trainer = Trainer(
     model=model,
     args=training_args,
-    train_dataset=tokenized_dataset["train"],
-    eval_dataset=tokenized_dataset["validation"],
+    train_dataset=TKDataset(tokenized_dataset, "train"),
+    eval_dataset=TKDataset(tokenized_dataset, "validation"),
     data_collator=data_collator,
     tokenizer=tokenizer,
     compute_metrics=compute_metrics

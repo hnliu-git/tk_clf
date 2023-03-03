@@ -1,3 +1,4 @@
+from torch.utils.data import IterableDataset, DataLoader
 
 def build_tags(fields, non_fields):
     tags = list()
@@ -34,6 +35,58 @@ def tokenize_and_align_labels(examples, tokenizer, label_all_tokens=True):
 
     tokenized_inputs["labels"] = labels
     return tokenized_inputs
+
+def tokenize_and_align_labels_and_chunk(example, tokenizer, stride=32):
+
+    tokenized_input_chunk = tokenizer(
+        example['tokens'],
+        truncation=True,
+        max_length=512,
+        return_overflowing_tokens=True,
+        stride=stride,
+        is_split_into_words=True
+    )
+
+    chunk_num = len(tokenized_input_chunk['overflow_to_sample_mapping'])
+
+    label = example['ner_tags']
+    labels = [[] for _ in range(chunk_num)]
+
+    for i in range(chunk_num):
+        word_ids = tokenized_input_chunk.word_ids(i)
+        previous_word_idx = None
+        label_ids = []
+        for j, word_idx in enumerate(word_ids):
+            if word_idx is None:
+                label_ids.append(-100)
+            # if still in the overlapping scope, set to invalid labels
+            elif i > 0 and j <= stride:
+                label_ids.append(-100)
+            elif word_idx != previous_word_idx:
+                label_ids.append(label[word_idx])
+            else:
+                label_ids.append(label[word_idx])
+        
+        labels[i].append(label_ids)
+
+    tokenized_input_chunk['labels'] = labels
+    tokenized_input_chunk.pop('overflow_to_sample_mapping')
+    tokenized_input_chunk['chunk_num'] = chunk_num
+    
+    return tokenized_input_chunk
+
+class TKDataset(IterableDataset):
+
+    def __init__(self, dataset, split) -> None:
+        self.dataset = dataset[split]
+
+    def __iter__(self):
+        for doc in self.dataset:
+            for i in range(doc['chunk_num']):
+                yield {
+                    k: doc[k][i]
+                    for k in ['input_ids', 'attention_mask', 'labels']
+                }
 
 vac_tags = [
     "vac_job_title","vac_num_positions","vac_location","org_name","org_num_employees","org_industry","prof_education",
