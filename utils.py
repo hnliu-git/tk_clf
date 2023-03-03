@@ -50,7 +50,7 @@ def tokenize_and_align_labels_and_chunk(example, tokenizer, stride=32):
     chunk_num = len(tokenized_input_chunk['overflow_to_sample_mapping'])
 
     label = example['ner_tags']
-    labels = [[] for _ in range(chunk_num)]
+    labels = []
 
     for i in range(chunk_num):
         word_ids = tokenized_input_chunk.word_ids(i)
@@ -67,7 +67,8 @@ def tokenize_and_align_labels_and_chunk(example, tokenizer, stride=32):
             else:
                 label_ids.append(label[word_idx])
         
-        labels[i].append(label_ids)
+        
+        labels.append(label_ids)
 
     tokenized_input_chunk['labels'] = labels
     tokenized_input_chunk.pop('overflow_to_sample_mapping')
@@ -79,6 +80,9 @@ class TKDataset(IterableDataset):
 
     def __init__(self, dataset, split) -> None:
         self.dataset = dataset[split]
+
+    def __len__(self):
+        return sum(self.dataset['chunk_num'])
 
     def __iter__(self):
         for doc in self.dataset:

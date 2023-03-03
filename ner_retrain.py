@@ -7,9 +7,11 @@ from metric_utils.metrics import initialize_metrics
 from metric_utils.data_utils import TagDict
 
 import datasets
-import numpy as np
-import wandb
 
+import numpy as np
+# import wandb
+import os
+os.environ["WANDB_DISABLED"] = "true"
 
 def compute_metrics(p):
     predictions, labels = p
@@ -30,7 +32,7 @@ def compute_metrics(p):
     return results
 
 epoch = 20
-data_folder = '../'
+data_folder = 'data/vac-nl-no-norm/'
 model_name = 'xlm-roberta-base'
 exp_name = '%s-en-epoch%d'%(model_name, epoch)
 
@@ -41,6 +43,7 @@ data_files = {
 }
 
 dataset = datasets.load_dataset('json', data_files=data_files)
+dataset.cleanup_cache_files()
 
 print(f'train: {len(dataset["train"])}')
 print(f'eval: {len(dataset["validation"])}')
@@ -62,7 +65,7 @@ metrics = initialize_metrics(
     main_entities=open('metric_utils/main_ents.txt').read().splitlines()
 )
 
-wandb.init(project="bert_vac_ner", name=exp_name)
+# wandb.init(project="bert_vac_ner", name=exp_name)
 
 training_args = TrainingArguments(
     output_dir="./fine_tune_bert_output",
@@ -73,7 +76,7 @@ training_args = TrainingArguments(
     num_train_epochs=epoch,
     weight_decay=0.01,
     logging_steps = 100,
-    report_to="wandb",
+    # report_to="wandb",
     run_name = "ep_01_tokenized_02",
     save_strategy='no'
 )
@@ -89,4 +92,4 @@ trainer = Trainer(
 )
 
 trainer.train()
-wandb.finish()
+# wandb.finish()
