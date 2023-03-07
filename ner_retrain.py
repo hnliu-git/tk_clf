@@ -9,7 +9,7 @@ from metric_utils.data_utils import TagDict
 import datasets
 
 import numpy as np
-import wandb
+# import wandb
 import os
 os.environ["WANDB_DISABLED"] = "true"
 
@@ -33,7 +33,7 @@ def compute_metrics(p):
 
 epoch = 20
 bsz = 16
-data_folder = '../'
+data_folder = 'data/vac-nl-orig/'
 model_name = 'xlm-roberta-base'
 exp_name = '%s-nl-epoch%d'%(model_name, epoch)
 
@@ -51,7 +51,7 @@ print(f'eval: {len(dataset["validation"])}')
 print(f'test: {len(dataset["test"])}')
 
 tokenizer = AutoTokenizer.from_pretrained(model_name)
-tokenized_dataset = dataset.map(lambda x: tokenize_and_align_labels_and_chunk(x, tokenizer))
+tokenized_dataset = dataset.map(lambda x: tokenize_and_align_labels(x, tokenizer), batched=True)
 
 data_collator = DataCollatorForTokenClassification(tokenizer)
 
@@ -66,7 +66,7 @@ metrics = initialize_metrics(
     main_entities=open('metric_utils/main_ents.txt').read().splitlines()
 )
 
-wandb.init(project="bert_vac_ner", name=exp_name)
+# wandb.init(project="bert_vac_ner", name=exp_name)
 
 training_args = TrainingArguments(
     output_dir="./fine_tune_bert_output",
@@ -77,7 +77,7 @@ training_args = TrainingArguments(
     num_train_epochs=epoch,
     weight_decay=0.01,
     logging_steps = 100,
-    report_to="wandb",
+    # report_to="wandb",
     run_name = "ep_01_tokenized_02",
     save_strategy='no'
 )
@@ -85,12 +85,12 @@ training_args = TrainingArguments(
 trainer = Trainer(
     model=model,
     args=training_args,
-    train_dataset=TKDataset(tokenized_dataset, "train"),
-    eval_dataset=TKDataset(tokenized_dataset, "validation"),
+    train_dataset=tokenized_dataset['train'],
+    eval_dataset=tokenized_dataset['devel'],
     data_collator=data_collator,
     tokenizer=tokenizer,
     compute_metrics=compute_metrics
 )
 
 trainer.train()
-wandb.finish()
+# wandb.finish()
