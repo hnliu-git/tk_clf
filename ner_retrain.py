@@ -9,9 +9,9 @@ from metric_utils.data_utils import TagDict
 import datasets
 
 import numpy as np
-# import wandb
-import os
-os.environ["WANDB_DISABLED"] = "true"
+import wandb
+# import os
+# os.environ["WANDB_DISABLED"] = "true"
 
 def compute_metrics(p):
     predictions, labels = p
@@ -66,7 +66,7 @@ metrics = initialize_metrics(
     main_entities=open('metric_utils/main_ents.txt').read().splitlines()
 )
 
-# wandb.init(project="bert_vac_ner", name=exp_name)
+wandb.init(project="bert_vac_ner", name=exp_name)
 
 training_args = TrainingArguments(
     output_dir="./fine_tune_bert_output",
@@ -77,7 +77,7 @@ training_args = TrainingArguments(
     num_train_epochs=epoch,
     weight_decay=0.01,
     logging_steps = 100,
-    # report_to="wandb",
+    report_to="wandb",
     run_name = "ep_01_tokenized_02",
     save_strategy='no'
 )
@@ -86,11 +86,11 @@ trainer = Trainer(
     model=model,
     args=training_args,
     train_dataset=tokenized_dataset['train'],
-    eval_dataset=tokenized_dataset['devel'],
+    eval_dataset=tokenized_dataset['validation'],
     data_collator=data_collator,
     tokenizer=tokenizer,
     compute_metrics=compute_metrics
 )
 
 trainer.train()
-# wandb.finish()
+wandb.finish()
